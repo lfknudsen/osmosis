@@ -79,35 +79,15 @@ public class NodeElementProcessor extends EntityElementProcessor implements TagL
 	 */
 	public void begin(Attributes attributes) {
 		long id;
-		String sversion;
-		int version;
-		TimestampContainer timestampContainer;
-		String rawUserId;
-		String rawUserName;
-		OsmUser user;
-		long changesetId;
 		double latitude;
 		double longitude;
-		
+
 		id = Long.parseLong(attributes.getValue(ATTRIBUTE_NAME_ID));
-		sversion = attributes.getValue(ATTRIBUTE_NAME_VERSION);
-		if (sversion == null) {
-			throw new OsmosisRuntimeException("Node " + id
-					+ " does not have a version attribute as OSM 0.6 are required to have.  Is this a 0.5 file?");
-		} else {
-			version = Integer.parseInt(sversion);
-		}
-		timestampContainer = createTimestampContainer(attributes.getValue(ATTRIBUTE_NAME_TIMESTAMP));
-		rawUserId = attributes.getValue(ATTRIBUTE_NAME_USERID);
-		rawUserName = attributes.getValue(ATTRIBUTE_NAME_USER);
-		changesetId = buildChangesetId(attributes.getValue(ATTRIBUTE_NAME_CHANGESET_ID));
 		
 		latitude = getLatLonDouble(attributes, ATTRIBUTE_NAME_LATITUDE, id);
 		longitude = getLatLonDouble(attributes, ATTRIBUTE_NAME_LONGITUDE, id);
 		
-		user = buildUser(rawUserId, rawUserName);
-		
-		node = new Node(new CommonEntityData(id, version, timestampContainer, user, changesetId), latitude, longitude);
+		node = new Node(new CommonEntityData(id), latitude, longitude);
 	}
 	
 	/**

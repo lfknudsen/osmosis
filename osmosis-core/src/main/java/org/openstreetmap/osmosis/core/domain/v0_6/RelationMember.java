@@ -13,7 +13,6 @@ import org.openstreetmap.osmosis.core.store.Storeable;
  * @author Brett Henderson
  */
 public class RelationMember implements Comparable<RelationMember>, Storeable {
-	
 	private long memberId;
 	private EntityType memberType;
 	private String memberRole;

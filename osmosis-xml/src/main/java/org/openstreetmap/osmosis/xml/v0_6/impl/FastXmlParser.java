@@ -1,13 +1,6 @@
 // This software is released into the Public Domain.  See copying.txt for details.
 package org.openstreetmap.osmosis.xml.v0_6.impl;
 
-import java.util.Calendar;
-import java.util.logging.Logger;
-
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-
 import org.openstreetmap.osmosis.core.OsmosisRuntimeException;
 import org.openstreetmap.osmosis.core.container.v0_6.BoundContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.NodeContainer;
@@ -17,18 +10,15 @@ import org.openstreetmap.osmosis.core.domain.common.SimpleTimestampContainer;
 import org.openstreetmap.osmosis.core.domain.common.TimestampContainer;
 import org.openstreetmap.osmosis.core.domain.common.TimestampFormat;
 import org.openstreetmap.osmosis.core.domain.common.UnparsedTimestampContainer;
-import org.openstreetmap.osmosis.core.domain.v0_6.Bound;
-import org.openstreetmap.osmosis.core.domain.v0_6.CommonEntityData;
-import org.openstreetmap.osmosis.core.domain.v0_6.EntityType;
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
-import org.openstreetmap.osmosis.core.domain.v0_6.OsmUser;
-import org.openstreetmap.osmosis.core.domain.v0_6.Relation;
-import org.openstreetmap.osmosis.core.domain.v0_6.RelationMember;
-import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
+import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.xml.common.XmlTimestampFormat;
+
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.util.Calendar;
+import java.util.logging.Logger;
 
 
 /**
@@ -75,43 +65,16 @@ public class FastXmlParser {
 	 *            The sink receiving all output data.
 	 * @param reader
 	 *            The input xml reader.
-	 * @param enableDateParsing
-	 *            If true, parsing of dates in the xml will be enabled,
-	 *            otherwise the current system time will be used.
 	 */
-	public FastXmlParser(Sink sink, XMLStreamReader reader, boolean enableDateParsing) {
+	public FastXmlParser(Sink sink, XMLStreamReader reader) {
 		this.sink = sink;
-		this.enableDateParsing = enableDateParsing;
 		this.reader = reader;
-		
-		if (enableDateParsing) {
-			timestampFormat = new XmlTimestampFormat();
-		} else {
-			Calendar calendar;
-			
-			calendar = Calendar.getInstance();
-			calendar.set(Calendar.MILLISECOND, 0);
-			dummyTimestampContainer = new SimpleTimestampContainer(calendar.getTime());
-		}
-		
 		memberTypeParser = new MemberTypeParser();
 	}
 	
 	private final XMLStreamReader reader;
 	private final Sink sink;
-	private final boolean enableDateParsing;
 	private final MemberTypeParser memberTypeParser;
-	private TimestampFormat timestampFormat;
-	private TimestampContainer dummyTimestampContainer;
-
-	
-	private TimestampContainer parseTimestamp(String data) {
-		if (enableDateParsing) {
-			return new UnparsedTimestampContainer(timestampFormat, data);
-		} else {
-			return dummyTimestampContainer;
-		}
-	}
 	
 	private void readUnknownElement() throws XMLStreamException {
 		int level = 0;
@@ -126,64 +89,14 @@ public class FastXmlParser {
 		} while (level > 0);
 	}
 
-
-	/**
-	 * Creates a user instance based on the current entity attributes. This includes identifying the
-	 * case where no user is available.
-	 * 
-	 * @return The appropriate user instance.
-	 */
-	private OsmUser readUser() {
-		String rawUserId;
-		String rawUserName;
-		
-		rawUserId = reader.getAttributeValue(null, ATTRIBUTE_NAME_USER_ID);
-		rawUserName = reader.getAttributeValue(null, ATTRIBUTE_NAME_USER);
-		
-		if (rawUserId != null) {
-			int userId;
-			String userName;
-			
-			userId = Integer.parseInt(rawUserId);
-			if (rawUserName == null) {
-				userName = "";
-			} else {
-				userName = rawUserName;
-			}
-			
-			return new OsmUser(userId, userName);
-			
-		} else {
-			return OsmUser.NONE;
-		}
-	}
-	
-	
-	/**
-	 * Parses a changeset id from the current entity.
-	 * 
-	 * @return The changeset id as a long. 0 is returned if no attribute is available.
-	 */
-	private long readChangesetId() {
-		String changesetIdAttribute;
-		
-		changesetIdAttribute = reader.getAttributeValue(null, ATTRIBUTE_NAME_CHANGESET_ID);
-		if (changesetIdAttribute != null) {
-			return Long.parseLong(changesetIdAttribute);
-		} else {
-			return 0;
-		}
-	}
-	
-	
 	private Bound readBound() throws Exception {
 		String boxString;
 		String origin;
 		String[] boundStrings;
-		Double right;
-		Double left;
-		Double top;
-		Double bottom;
+		double right;
+		double left;
+		double top;
+		double bottom;
 		
 		boxString = reader.getAttributeValue(null, ATTRIBUTE_NAME_BOX);
 		
@@ -257,24 +170,15 @@ public class FastXmlParser {
 	
 	private Node readNode() throws Exception {
 		long id;
-		int version;
-		TimestampContainer timestamp;
-		OsmUser user;
-		long changesetId;
 		double latitude;
 		double longitude;
 		Node node;
 		
 		id = Long.parseLong(reader.getAttributeValue(null, ATTRIBUTE_NAME_ID));
-		version = Integer.parseInt(reader.getAttributeValue(null, ATTRIBUTE_NAME_VERSION));
-		timestamp = parseTimestamp(reader.getAttributeValue(null, ATTRIBUTE_NAME_TIMESTAMP));
-		changesetId = Long.parseLong(reader.getAttributeValue(null, ATTRIBUTE_NAME_CHANGESET_ID));
-		user = readUser();
-		changesetId = readChangesetId();
 		latitude = Double.parseDouble(reader.getAttributeValue(null, ATTRIBUTE_NAME_LATITUDE));
 		longitude = Double.parseDouble(reader.getAttributeValue(null, ATTRIBUTE_NAME_LONGITUDE));
 		
-		node = new Node(new CommonEntityData(id, version, timestamp, user, changesetId), latitude, longitude);
+		node = new Node(new CommonEntityData(id), latitude, longitude);
 		
 		reader.nextTag();
 		while (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
@@ -300,19 +204,11 @@ public class FastXmlParser {
 	
 	private Way readWay() throws Exception {
 		long id;
-		int version;
-		TimestampContainer timestamp;
-		OsmUser user;
-		long changesetId;
 		Way way;
-		
+
 		id = Long.parseLong(reader.getAttributeValue(null, ATTRIBUTE_NAME_ID));
-		version = Integer.parseInt(reader.getAttributeValue(null, ATTRIBUTE_NAME_VERSION));
-		timestamp = parseTimestamp(reader.getAttributeValue(null, ATTRIBUTE_NAME_TIMESTAMP));
-		user = readUser();
-		changesetId = readChangesetId();
 		
-		way = new Way(new CommonEntityData(id, version, timestamp, user, changesetId));
+		way = new Way(new CommonEntityData(id));
 		
 		reader.nextTag();
 		while (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {
@@ -335,7 +231,7 @@ public class FastXmlParser {
 		String role;
 		
 		id = Long.parseLong(reader.getAttributeValue(null, ATTRIBUTE_NAME_REF));
-		type = memberTypeParser.parse(reader.getAttributeValue(null, ATTRIBUTE_NAME_TYPE));
+		type = memberTypeParser.parse(reader.getAttributeValue(null, ATTRIBUTE_NAME_TYPE).charAt(0));
 		role = reader.getAttributeValue(null, ATTRIBUTE_NAME_ROLE);
 		
 		RelationMember relationMember = new RelationMember(id, type, role);
@@ -348,19 +244,11 @@ public class FastXmlParser {
 	
 	private Relation readRelation() throws Exception {
 		long id;
-		int version;
-		TimestampContainer timestamp;
-		OsmUser user;
-		long changesetId;
 		Relation relation;
 		
 		id = Long.parseLong(reader.getAttributeValue(null, ATTRIBUTE_NAME_ID));
-		version = Integer.parseInt(reader.getAttributeValue(null, ATTRIBUTE_NAME_VERSION));
-		timestamp = parseTimestamp(reader.getAttributeValue(null, ATTRIBUTE_NAME_TIMESTAMP));
-		user = readUser();
-		changesetId = readChangesetId();
 		
-		relation = new Relation(new CommonEntityData(id, version, timestamp, user, changesetId));
+		relation = new Relation(new CommonEntityData(id));
 		
 		reader.nextTag();
 		while (reader.getEventType() == XMLStreamConstants.START_ELEMENT) {

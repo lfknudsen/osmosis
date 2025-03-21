@@ -1,15 +1,15 @@
 // This software is released into the Public Domain.  See copying.txt for details.
 package org.openstreetmap.osmosis.core.domain.v0_6;
 
-import java.util.Collection;
-import java.util.Date;
-
 import org.openstreetmap.osmosis.core.domain.common.SimpleTimestampContainer;
 import org.openstreetmap.osmosis.core.domain.common.TimestampContainer;
 import org.openstreetmap.osmosis.core.store.StoreClassRegister;
 import org.openstreetmap.osmosis.core.store.StoreReader;
 import org.openstreetmap.osmosis.core.store.StoreWriter;
 import org.openstreetmap.osmosis.core.util.FixedPrecisionCoordinateConvertor;
+
+import java.util.Collection;
+import java.util.Date;
 
 
 /**
@@ -18,24 +18,14 @@ import org.openstreetmap.osmosis.core.util.FixedPrecisionCoordinateConvertor;
  * @author Brett Henderson
  */
 public class Node extends Entity implements Comparable<Node> {
-
 	private double latitude;
 	private double longitude;
 
-
 	/**
 	 * Creates a new instance.
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @param latitude
 	 *            The geographic latitude.
 	 * @param longitude
@@ -43,37 +33,8 @@ public class Node extends Entity implements Comparable<Node> {
 	 * @deprecated As of 0.40, replaced by Node(entityData, latitude, longitude).
 	 */
 	@Deprecated
-	public Node(
-			long id, int version, Date timestamp, OsmUser user, long changesetId, double latitude, double longitude) {
-		// Chain to the more-specific constructor
-		this(id, version, new SimpleTimestampContainer(timestamp), user, changesetId, latitude, longitude);
-	}
-
-
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative timestamp representation.
-	 * @param user
-	 *            The name of the user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @param latitude
-	 *            The geographic latitude.
-	 * @param longitude
-	 *            The geographic longitude.
-	 * @deprecated As of 0.40, replaced by Node(entityData, latitude, longitude).
-	 */
-	@Deprecated
-	public Node(long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId,
-			double latitude, double longitude) {
-		super(id, version, timestampContainer, user, changesetId);
-
+	public Node(long id, double latitude, double longitude) {
+		super(id);
 		init(latitude, longitude);
 	}
 
@@ -90,7 +51,6 @@ public class Node extends Entity implements Comparable<Node> {
 	 */
 	public Node(CommonEntityData entityData, double latitude, double longitude) {
 		super(entityData);
-
 		init(latitude, longitude);
 	}
 
@@ -100,14 +60,6 @@ public class Node extends Entity implements Comparable<Node> {
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @param tags
 	 *            The tags to apply to the object.
 	 * @param latitude
@@ -117,39 +69,8 @@ public class Node extends Entity implements Comparable<Node> {
 	 * @deprecated As of 0.40, replaced by Node(entityData, latitude, longitude).
 	 */
 	@Deprecated
-	public Node(long id, int version, Date timestamp, OsmUser user, long changesetId, Collection<Tag> tags,
-			double latitude, double longitude) {
-		// Chain to the more-specific constructor
-		this(id, version, new SimpleTimestampContainer(timestamp), user, changesetId, tags, latitude, longitude);
-	}
-
-
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative timestamp representation.
-	 * @param user
-	 *            The name of the user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @param tags
-	 *            The tags to apply to the object.
-	 * @param latitude
-	 *            The geographic latitude.
-	 * @param longitude
-	 *            The geographic longitude.
-	 * @deprecated As of 0.40, replaced by Node(entityData, latitude, longitude).
-	 */
-	@Deprecated
-	public Node(long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId,
-			Collection<Tag> tags, double latitude, double longitude) {
-		super(id, version, timestampContainer, user, changesetId, tags);
-
+	public Node(long id, Collection<Tag> tags, double latitude, double longitude) {
+		super(id, tags);
 		init(latitude, longitude);
 	}
 	
@@ -162,7 +83,6 @@ public class Node extends Entity implements Comparable<Node> {
 	 */
 	private Node(Node originalNode) {
 		super(originalNode);
-		
 		init(originalNode.latitude, originalNode.longitude);
 	}
 
@@ -241,7 +161,7 @@ public class Node extends Entity implements Comparable<Node> {
 		 * same value for any two objects that compare equal. Using both id and version will provide
 		 * a good distribution of values but is simple to calculate.
 		 */
-		return (int) getId() + getVersion();
+		return (int) getId() ^ Double.hashCode(latitude) ^ Double.hashCode(longitude);
 	}
 
 
@@ -264,14 +184,6 @@ public class Node extends Entity implements Comparable<Node> {
 			return 1;
 		}
 
-		if (this.getVersion() < comparisonNode.getVersion()) {
-			return -1;
-		}
-
-		if (this.getVersion() > comparisonNode.getVersion()) {
-			return 1;
-		}
-
 		if (this.latitude < comparisonNode.latitude) {
 			return -1;
 		}
@@ -286,22 +198,6 @@ public class Node extends Entity implements Comparable<Node> {
 
 		if (this.longitude > comparisonNode.longitude) {
 			return 1;
-		}
-
-		if (this.getTimestamp() == null && comparisonNode.getTimestamp() != null) {
-			return -1;
-		}
-		if (this.getTimestamp() != null && comparisonNode.getTimestamp() == null) {
-			return 1;
-		}
-		if (this.getTimestamp() != null && comparisonNode.getTimestamp() != null) {
-			int result;
-
-			result = this.getTimestamp().compareTo(comparisonNode.getTimestamp());
-
-			if (result != 0) {
-				return result;
-			}
 		}
 
 		return compareTags(comparisonNode.getTags());

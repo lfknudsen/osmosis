@@ -1,18 +1,11 @@
 // This software is released into the Public Domain.  See copying.txt for details.
 package org.openstreetmap.osmosis.core.domain.v0_6;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import org.openstreetmap.osmosis.core.domain.common.SimpleTimestampContainer;
-import org.openstreetmap.osmosis.core.domain.common.TimestampContainer;
 import org.openstreetmap.osmosis.core.store.StoreClassRegister;
 import org.openstreetmap.osmosis.core.store.StoreReader;
 import org.openstreetmap.osmosis.core.store.StoreWriter;
+
+import java.util.*;
 
 
 /**
@@ -29,43 +22,11 @@ public class Relation extends Entity implements Comparable<Relation> {
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @deprecated As of 0.40, replaced by Relation(entityData).
 	 */
 	@Deprecated
-	public Relation(long id, int version, Date timestamp, OsmUser user, long changesetId) {
-		// Chain to the more-specific constructor
-		this(id, version, new SimpleTimestampContainer(timestamp), user, changesetId);
-	}
-	
-	
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative
-	 *            timestamp representation.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @deprecated As of 0.40, replaced by Relation(entityData).
-	 */
-	@Deprecated
-	public Relation(long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId) {
-		super(id, version, timestampContainer, user, changesetId);
-		
+	public Relation(long id) {
+		super(id);
 		this.members = new ArrayList<RelationMember>();
 	}
 	
@@ -82,20 +43,12 @@ public class Relation extends Entity implements Comparable<Relation> {
 		this.members = new ArrayList<RelationMember>();
 	}
 	
-	
+
 	/**
 	 * Creates a new instance.
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @param tags
 	 *            The tags to apply to the object.
 	 * @param members
@@ -104,38 +57,8 @@ public class Relation extends Entity implements Comparable<Relation> {
 	 */
 	@Deprecated
 	public Relation(
-			long id, int version, Date timestamp, OsmUser user, long changesetId, Collection<Tag> tags,
-			List<RelationMember> members) {
-		// Chain to the more-specific constructor
-		this(id, version, new SimpleTimestampContainer(timestamp), user, changesetId, tags, members);
-	}
-	
-	
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative
-	 *            timestamp representation.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @param tags
-	 *            The tags to apply to the object.
-	 * @param members
-	 *            The members to apply to the object.
-	 * @deprecated As of 0.40, replaced by Relation(entityData, members).
-	 */
-	@Deprecated
-	public Relation(
-			long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId,
-			Collection<Tag> tags, List<RelationMember> members) {
-		super(id, version, timestampContainer, user, changesetId, tags);
+			long id, Collection<Tag> tags, List<RelationMember> members) {
+		super(id, tags);
 		
 		this.members = new ArrayList<RelationMember>(members);
 	}
@@ -234,13 +157,7 @@ public class Relation extends Entity implements Comparable<Relation> {
 	 */
 	@Override
 	public int hashCode() {
-		/*
-		 * As per the hashCode definition, this doesn't have to be unique it
-		 * just has to return the same value for any two objects that compare
-		 * equal. Using both id and version will provide a good distribution of
-		 * values but is simple to calculate.
-		 */
-		return (int) getId() + getVersion();
+		return Long.hashCode(getId());
 	}
 	
 	
@@ -297,29 +214,6 @@ public class Relation extends Entity implements Comparable<Relation> {
 		}
 		if (this.getId() > comparisonRelation.getId()) {
 			return 1;
-		}
-
-		if (this.getVersion() < comparisonRelation.getVersion()) {
-			return -1;
-		}
-		if (this.getVersion() > comparisonRelation.getVersion()) {
-			return 1;
-		}
-
-		if (this.getTimestamp() == null && comparisonRelation.getTimestamp() != null) {
-			return -1;
-		}
-		if (this.getTimestamp() != null && comparisonRelation.getTimestamp() == null) {
-			return 1;
-		}
-		if (this.getTimestamp() != null && comparisonRelation.getTimestamp() != null) {
-			int result;
-			
-			result = this.getTimestamp().compareTo(comparisonRelation.getTimestamp());
-			
-			if (result != 0) {
-				return result;
-			}
 		}
 		
 		memberListResult = compareMemberList(

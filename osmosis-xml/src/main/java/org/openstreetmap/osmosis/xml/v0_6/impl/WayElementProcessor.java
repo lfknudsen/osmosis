@@ -75,14 +75,8 @@ public class WayElementProcessor extends EntityElementProcessor implements TagLi
 		} else {
 			version = Integer.parseInt(sversion);
 		}
-		timestampContainer = createTimestampContainer(attributes.getValue(ATTRIBUTE_NAME_TIMESTAMP));
-		rawUserId = attributes.getValue(ATTRIBUTE_NAME_USERID);
-		rawUserName = attributes.getValue(ATTRIBUTE_NAME_USER);
-		changesetId = buildChangesetId(attributes.getValue(ATTRIBUTE_NAME_CHANGESET_ID));
 		
-		user = buildUser(rawUserId, rawUserName);
-		
-		way = new Way(new CommonEntityData(id, version, timestampContainer, user, changesetId));
+		way = new Way(new CommonEntityData(id));
 	}
 	
 	

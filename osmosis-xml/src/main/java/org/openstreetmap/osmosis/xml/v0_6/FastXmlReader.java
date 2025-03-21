@@ -74,7 +74,7 @@ public class FastXmlReader extends BaseXMLReader implements RunnableSource {
             factory.setProperty(XMLInputFactory.IS_VALIDATING, false);
             final XMLStreamReader xpp = factory.createXMLStreamReader(stream);
 
-            final FastXmlParser parser = new FastXmlParser(this.sink, xpp, this.isEnableDateParsing());
+            final FastXmlParser parser = new FastXmlParser(this.sink, xpp);
             parser.readOsm();
         } catch (final XMLStreamException e) {
             throw new SAXException(e);

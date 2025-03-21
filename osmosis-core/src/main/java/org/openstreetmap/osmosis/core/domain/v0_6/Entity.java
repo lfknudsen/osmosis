@@ -1,16 +1,16 @@
 // This software is released into the Public Domain.  See copying.txt for details.
 package org.openstreetmap.osmosis.core.domain.v0_6;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-
 import org.openstreetmap.osmosis.core.domain.common.TimestampContainer;
 import org.openstreetmap.osmosis.core.domain.common.TimestampFormat;
 import org.openstreetmap.osmosis.core.store.StoreClassRegister;
 import org.openstreetmap.osmosis.core.store.StoreReader;
 import org.openstreetmap.osmosis.core.store.StoreWriter;
 import org.openstreetmap.osmosis.core.store.Storeable;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
 
 
 /**
@@ -21,7 +21,7 @@ import org.openstreetmap.osmosis.core.store.Storeable;
  */
 public abstract class Entity implements Storeable {
 	
-	private CommonEntityData entityData;
+	private final CommonEntityData entityData;
 	
 	
 	/**
@@ -29,19 +29,11 @@ public abstract class Entity implements Storeable {
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @deprecated As of 0.40, replaced by Entity(entityData).
 	 */
 	@Deprecated
-	public Entity(long id, int version, Date timestamp, OsmUser user, long changesetId) {
-		entityData = new CommonEntityData(id, version, timestamp, user, changesetId);
+	public Entity(long id) {
+		entityData = new CommonEntityData(id);
 	}
 	
 	
@@ -50,68 +42,13 @@ public abstract class Entity implements Storeable {
 	 * 
 	 * @param id
 	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative
-	 *            timestamp representation.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @deprecated As of 0.40, replaced by Entity(entityData).
-	 */
-	@Deprecated
-	public Entity(long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId) {
-		entityData = new CommonEntityData(id, version, timestampContainer, user, changesetId);
-	}
-	
-	
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestamp
-	 *            The last updated timestamp.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
 	 * @param tags
 	 *            The tags to apply to the object.
 	 * @deprecated As of 0.40, replaced by Entity(entityData).
 	 */
 	@Deprecated
-	public Entity(long id, int version, Date timestamp, OsmUser user, long changesetId, Collection<Tag> tags) {
-		entityData = new CommonEntityData(id, version, timestamp, user, changesetId, tags);
-	}
-	
-	
-	/**
-	 * Creates a new instance.
-	 * 
-	 * @param id
-	 *            The unique identifier.
-	 * @param version
-	 *            The version of the entity.
-	 * @param timestampContainer
-	 *            The container holding the timestamp in an alternative
-	 *            timestamp representation.
-	 * @param user
-	 *            The user that last modified this entity.
-	 * @param changesetId
-	 *            The id of the changeset that this version of the entity was created by.
-	 * @param tags
-	 *            The tags to apply to the object.
-	 * @deprecated As of 0.40, replaced by Entity(entityData).
-	 */
-	@Deprecated
-	public Entity(long id, int version, TimestampContainer timestampContainer, OsmUser user, long changesetId,
-			Collection<Tag> tags) {
-		entityData = new CommonEntityData(id, version, timestampContainer, user, changesetId, tags);
+	public Entity(long id, Collection<Tag> tags) {
+		entityData = new CommonEntityData(id, tags);
 	}
 	
 	
@@ -201,132 +138,6 @@ public abstract class Entity implements Storeable {
 		entityData.setId(id);
 	}
 	
-	
-	/**
-	 * Gets the version.
-	 * 
-	 * @return The version.
-	 */
-	public int getVersion() {
-		return entityData.getVersion();
-	}
-
-
-	/**
-	 * Sets the version.
-	 * 
-	 * @param version
-	 *            The version.
-	 */
-	public void setVersion(int version) {
-		entityData.setVersion(version);
-	}
-	
-	
-	/**
-	 * Gets the timestamp in date form. This is the standard method for
-	 * retrieving timestamp information.
-	 * 
-	 * @return The timestamp.
-	 */
-	public Date getTimestamp() {
-		return entityData.getTimestamp();
-	}
-
-
-	/**
-	 * Sets the timestamp in date form. This is the standard method of updating a timestamp.
-	 * 
-	 * @param timestamp
-	 *            The timestamp.
-	 */
-	public void setTimestamp(Date timestamp) {
-		entityData.setTimestamp(timestamp);
-	}
-	
-	
-	/**
-	 * Gets the timestamp container object which may hold the timestamp in a
-	 * different format. This is most useful if creating new copies of entities
-	 * because it can avoid the need to parse timestamp information into Date
-	 * form.
-	 * 
-	 * @return The timestamp container.
-	 */
-	public TimestampContainer getTimestampContainer() {
-		return entityData.getTimestampContainer();
-	}
-	
-	
-	/**
-	 * Sets the timestamp container object allowing the timestamp to be held in a different format.
-	 * This should be used if a date is already held in a timestamp container, or if date parsing
-	 * can be avoided.
-	 * 
-	 * @param timestampContainer
-	 *            The timestamp container.
-	 */
-	public void setTimestampContainer(TimestampContainer timestampContainer) {
-		entityData.setTimestampContainer(timestampContainer);
-	}
-	
-	
-	/**
-	 * Gets the timestamp in a string format. If the entity already contains a
-	 * string in string format it will return the original unparsed string
-	 * instead of formatting a date object.
-	 * 
-	 * @param timestampFormat
-	 *            The formatter to use for formatting the timestamp into a
-	 *            string.
-	 * @return The timestamp string.
-	 */
-	public String getFormattedTimestamp(TimestampFormat timestampFormat) {
-		return entityData.getFormattedTimestamp(timestampFormat);
-	}
-	
-	
-	/**
-	 * Returns the user who last edited the entity.
-	 * 
-	 * @return The user.
-	 */
-	public OsmUser getUser() {
-		return entityData.getUser();
-	}
-	
-	
-	/**
-	 * Sets the last modification user.
-	 * 
-	 * @param user
-	 *            The user.
-	 */
-	public void setUser(OsmUser user) {
-		entityData.setUser(user);
-	}
-	
-	
-	/**
-	 * Gets the id of the changeset that this version of the entity was created by.
-	 * 
-	 * @return The changeset id.
-	 */
-	public long getChangesetId() {
-		return entityData.getChangesetId();
-	}
-	
-	
-	/**
-	 * Sets the id of the changeset that this version of the entity was created by.
-	 * 
-	 * @param changesetId
-	 *            The changeset id.
-	 */
-	public void setChangesetId(long changesetId) {
-		entityData.setChangesetId(changesetId);
-	}
-
 
 	/**
 	 * Returns the attached tags. If the class is read-only, the collection will
